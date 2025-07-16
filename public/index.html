@@ -1,12 +1,691 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Hello, World!</title>
-	</head>
-	<body>
-		<h1 id="heading">Hello, World!</h1>
-		<p>This page comes from a static asset stored at `public/index.html` as configured in `wrangler.jsonc`.</p>
-	</body>
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>日本語⇄英語翻訳アプリ</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        color: #333;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        color: #666;
+        font-size: 1.1rem;
+      }
+
+      .translation-section {
+        display: grid;
+        grid-template-columns: 1fr 80px 1fr;
+        gap: 20px;
+        align-items: start;
+        margin-bottom: 30px;
+      }
+
+      .input-section,
+      .output-section {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+      }
+
+      .textarea {
+        width: 100%;
+        min-height: 150px;
+        padding: 20px;
+        border: 2px solid #e1e5e9;
+        border-radius: 12px;
+        font-size: 16px;
+        font-family: inherit;
+        resize: vertical;
+        transition: all 0.3s ease;
+        line-height: 1.6;
+      }
+
+      .textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .textarea[readonly] {
+        background-color: #f8f9fa;
+        cursor: default;
+      }
+
+      .translate-button {
+        align-self: center;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        cursor: pointer;
+        font-size: 24px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      .translate-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .translate-button:active {
+        transform: translateY(0);
+      }
+
+      .translate-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .api-key-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+      }
+
+      .api-key-section h3 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+      }
+
+      .api-key-input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Monaco", "Consolas", monospace;
+        transition: border-color 0.3s ease;
+      }
+
+      .api-key-input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .error-message {
+        background: #fee;
+        color: #c33;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .usage-info {
+        background: #e8f4fd;
+        padding: 20px;
+        border-radius: 12px;
+        margin-top: 20px;
+      }
+
+      .usage-info h4 {
+        color: #1976d2;
+        margin-bottom: 10px;
+      }
+
+      .usage-info p {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 8px;
+      }
+
+      .usage-info a {
+        color: #2196f3;
+        text-decoration: none;
+      }
+
+      .usage-info a:hover {
+        text-decoration: underline;
+      }
+
+      .api-setup-guide {
+        background: #e8f4fd;
+        border: 1px solid #90cdf4;
+        border-radius: 12px;
+        margin-top: 15px;
+        overflow: hidden;
+      }
+
+      .guide-header {
+        background: #bee3f8;
+        padding: 15px 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background-color 0.3s ease;
+      }
+
+      .guide-header:hover {
+        background: #90cdf4;
+      }
+
+      .guide-header h5 {
+        margin: 0;
+        color: #1976d2;
+        font-size: 1.1rem;
+      }
+
+      .guide-toggle {
+        font-size: 1.2rem;
+        color: #1976d2;
+        transition: transform 0.3s ease;
+      }
+
+      .guide-toggle.expanded {
+        transform: rotate(180deg);
+      }
+
+      .guide-content {
+        padding: 0 20px;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .guide-content.expanded {
+        max-height: 1000px;
+        padding: 20px;
+      }
+
+      .guide-step {
+        margin-bottom: 15px;
+        padding-left: 25px;
+        position: relative;
+      }
+
+      .guide-step::before {
+        content: counter(step-counter);
+        counter-increment: step-counter;
+        position: absolute;
+        left: 0px;
+        top: 5px;
+        background: #2196f3;
+        color: white;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .guide-steps {
+        counter-reset: step-counter;
+      }
+
+      .guide-step strong {
+        color: #1976d2;
+      }
+
+      .guide-link {
+        color: #2196f3;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .guide-link:hover {
+        text-decoration: underline;
+      }
+
+      .warning-box {
+        background: #fff5f5;
+        border: 1px solid #feb2b2;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 10px 0;
+      }
+
+      .warning-box p {
+        margin: 0;
+        color: #c53030;
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 768px) {
+        .translation-section {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto;
+          gap: 20px;
+        }
+
+        .translate-button {
+          justify-self: center;
+        }
+
+        .container {
+          padding: 20px;
+        }
+
+        .header h1 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "preact": "https://esm.sh/preact@10.26.9",
+          "preact/hooks": "https://esm.sh/preact@10.26.9/hooks",
+          "htm/preact": "https://esm.sh/htm@3.1.1/preact",
+          "nanostores": "https://esm.sh/nanostores@1.0.1",
+          "@nanostores/preact": "https://esm.sh/@nanostores/preact@1.0.0"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      import { render } from "preact";
+      import { html } from "htm/preact";
+      import { atom } from "nanostores";
+      import { useStore } from "@nanostores/preact";
+
+      // #region ユーティリティ関数
+
+      const getInitialApiKey = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get("apikey") || localStorage.getItem("googleTranslateApiKey") || "";
+      };
+
+      const translateText = async (japaneseText, apiKey) => {
+        const response = await fetch(
+          `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              q: japaneseText,
+              source: "ja",
+              target: "en",
+              format: "text",
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error?.message ||
+              `HTTP error! status: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+        return data.data.translations[0].translatedText;
+      };
+
+      // #endregion
+      // #region グローバルストア
+
+      const $apiKey = atom(getInitialApiKey());
+      const $japaneseText = atom("");
+      const $englishText = atom("");
+      const $isLoading = atom(false);
+      const $error = atom("");
+      const $isGuideExpanded = atom(localStorage.getItem("isGuideExpanded") === "true");
+
+      $apiKey.subscribe((apiKey) => {
+        if (apiKey) {
+          localStorage.setItem("googleTranslateApiKey", apiKey);
+        }
+      });
+
+      $isGuideExpanded.subscribe((isExpanded) => {
+        localStorage.setItem("isGuideExpanded", isExpanded.toString());
+      });
+
+      // #endregion
+      // #region グローバルアクション
+
+      const setApiKey = (apiKey) => $apiKey.set(apiKey);
+      const setJapaneseText = (text) => $japaneseText.set(text);
+      const setEnglishText = (text) => $englishText.set(text);
+      const setError = (error) => $error.set(error);
+      const setLoading = (isLoading) => $isLoading.set(isLoading);
+      const toggleGuide = () => $isGuideExpanded.set(!$isGuideExpanded.get());
+
+      const translate = async () => {
+        const japaneseText = $japaneseText.get();
+        const apiKey = $apiKey.get();
+
+        if (!japaneseText.trim()) {
+          setError("翻訳する日本語テキストを入力してください。");
+          return;
+        }
+
+        if (!apiKey.trim()) {
+          setError("Google Translation API キーを入力してください。");
+          return;
+        }
+
+        setLoading(true);
+        setError("");
+
+        try {
+          const translatedText = await translateText(japaneseText, apiKey);
+          setEnglishText(translatedText);
+        } catch (err) {
+          console.error("Translation error:", err);
+          setError(`翻訳エラー: ${err.message}`);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      // #endregion
+      // #region コンポーネント
+
+      const Header = () => {
+        return html`
+          <div className="header">
+            <h1>日本語⇄英語翻訳</h1>
+            <p>Google Translation APIを使用した翻訳アプリ</p>
+          </div>
+        `;
+      };
+
+      const ApiKeySection = () => {
+        const apiKey = useStore($apiKey);
+
+        return html`
+          <div className="api-key-section">
+            <h3>Google Translation API キー</h3>
+            <input
+              type="password"
+              placeholder="AIzaSy..."
+              value=${apiKey}
+              onInput=${(e) => setApiKey(e.target.value)}
+              className="api-key-input"
+            />
+          </div>
+        `;
+      };
+
+      const TranslateButton = () => {
+        const isLoading = useStore($isLoading);
+
+        return html`
+          <button
+            onClick=${translate}
+            className="translate-button"
+            title="Ctrl+Enter でも翻訳できます"
+            disabled=${isLoading}
+          >
+            ${isLoading ? html`<div className="loading"></div>` : "➔"}
+          </button>
+        `;
+      };
+
+      const TextArea = ({ label, placeholder, value, onInput, onKeyDown, readOnly = false }) => {
+        return html`
+          <div className=${readOnly ? "output-section" : "input-section"}>
+            <div className="label">${label}</div>
+            <textarea
+              placeholder=${placeholder}
+              value=${value}
+              onInput=${onInput}
+              onKeyDown=${onKeyDown}
+              readonly=${readOnly}
+              className="textarea"
+            ></textarea>
+          </div>
+        `;
+      };
+
+      const TranslationSection = () => {
+        const japaneseText = useStore($japaneseText);
+        const englishText = useStore($englishText);
+
+        const handleKeyPress = (e) => {
+          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            translate();
+          }
+        };
+
+        return html`
+          <div className="translation-section">
+            <${TextArea}
+              label="日本語"
+              placeholder="翻訳したい日本語テキストを入力してください..."
+              value=${japaneseText}
+              onInput=${(e) => setJapaneseText(e.target.value)}
+              onKeyDown=${handleKeyPress}
+            />
+
+            <${TranslateButton} />
+
+            <${TextArea}
+              label="英語"
+              placeholder="翻訳結果がここに表示されます..."
+              value=${englishText}
+              readOnly=${true}
+            />
+          </div>
+        `;
+      };
+
+      const ErrorMessage = () => {
+        const error = useStore($error);
+
+        if (!error) return null;
+
+        return html`
+          <div className="error-message">${error}</div>
+        `;
+      };
+
+      const ApiSetupGuide = () => {
+        const isGuideExpanded = useStore($isGuideExpanded);
+
+        return html`
+          <div className="api-setup-guide">
+            <div className="guide-header" onClick=${toggleGuide}>
+              <h5>APIキーの取得方法</h5>
+              <span className=${`guide-toggle ${isGuideExpanded ? "expanded" : ""}`}>
+                ▼
+              </span>
+            </div>
+
+            <div className=${`guide-content ${isGuideExpanded ? "expanded" : ""}`}>
+              <div className="guide-steps">
+                <div className="guide-step">
+                  <strong>Google Cloud アカウント作成</strong>
+                  <br />
+                  Google Cloud アカウントがない場合は
+                  <a
+                    href="https://console.cloud.google.com/freetrial"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="guide-link"
+                    >こちら</a
+                  >
+                  から無料アカウントを作成
+                </div>
+
+                <div className="guide-step">
+                  <strong>プロジェクト作成・選択</strong>
+                  <br />
+                  <a
+                    href="https://console.cloud.google.com/projectselector2/home/dashboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="guide-link"
+                    >Google Cloud Console</a
+                  >
+                  で新しいプロジェクトを作成するか、既存のプロジェクトを選択
+                </div>
+
+                <div className="guide-step">
+                  <strong>請求先アカウント設定</strong>
+                  <br />
+                  プロジェクトに請求先アカウントを設定（無料枠内でも利用可能）
+                  <div className="warning-box">
+                    <p>
+                      ⚠️ Translation APIは従量課金制ですが、月50万文字まで無料です
+                    </p>
+                  </div>
+                </div>
+
+                <div className="guide-step">
+                  <strong>Translation API 有効化</strong>
+                  <br />
+                  <a
+                    href="https://console.cloud.google.com/flows/enableapi?apiid=translate.googleapis.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="guide-link"
+                    >Translation API を有効化</a
+                  >
+                </div>
+
+                <div className="guide-step">
+                  <strong>APIキー作成</strong>
+                  <br />
+                  <a
+                    href="https://console.cloud.google.com/apis/credentials"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="guide-link"
+                    >認証情報ページ</a>
+                  ➔ 「認証情報を作成」➔ 「APIキー」を選択
+                </div>
+
+                <div className="guide-step">
+                  <strong>APIキー制限設定（推奨）</strong>
+                  <br />
+                  セキュリティのため、APIキーに制限を設定:
+                  <br />
+                  • API制限: Cloud Translation APIのみ
+                  <br />
+                  • アプリケーション制限: HTTPリファラー（必要に応じて）
+                </div>
+
+                <div className="guide-step">
+                  <strong>APIキーをコピー</strong>
+                  <br />
+                  作成されたAPIキー（AIzaSy...の文字列）をコピーして、上記の入力欄に貼り付け
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      };
+
+      const UsageInfo = () => {
+        return html`
+          <div className="usage-info">
+            <h4>使い方</h4>
+            <p>
+              1. Google Cloud Console で Translation API
+              を有効にし、APIキーを取得してください
+            </p>
+            <p>
+              2.
+              上記のAPIキー欄にキーを入力してください（ブラウザに保存されます）
+            </p>
+            <p>
+              3.
+              日本語テキストを入力し、➔ボタンをクリックまたはCtrl+Enterで翻訳
+            </p>
+            <p>💡 APIキーはURLパラメータでも指定可能です: ?apikey=YOUR_API_KEY</p>
+
+            <${ApiSetupGuide} />
+          </div>
+        `;
+      };
+
+      const TranslationApp = () => {
+        return html`
+          <div className="container">
+            <${Header} />
+            <${ApiKeySection} />
+            <${TranslationSection} />
+            <${ErrorMessage} />
+            <${UsageInfo} />
+          </div>
+        `;
+      };
+
+      // #endregion
+
+      render(html`<${TranslationApp} />`, document.getElementById("app"));
+    </script>
+  </body>
 </html>
