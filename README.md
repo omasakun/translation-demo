@@ -56,6 +56,24 @@ pnpm start
 
 開発サーバーが起動したら、ブラウザで表示されるURLにアクセスして動作を確認できます。
 
+### アイコンの生成
+
+SVGファイル（`public/icon.svg`）から各種サイズのPWAアイコンを生成:
+
+```bash
+pnpm run generate-icons
+```
+
+このコマンドは以下のアイコンファイルを生成します:
+- `icon-192x192.png` - PWA標準アイコン (192×192)
+- `icon-512x512.png` - PWA大サイズアイコン (512×512)
+- `apple-touch-icon.png` - Apple Touch Icon (180×180)
+- `favicon-32x32.png` - Favicon 大 (32×32)
+- `favicon-16x16.png` - Favicon 小 (16×16)
+- `favicon.ico` - 従来のfavicon
+
+**注意**: 依存関係のインストール時（`pnpm install`）に自動的にアイコンが生成されます。
+
 ## デプロイ
 
 Cloudflare Workersにデプロイする場合:
