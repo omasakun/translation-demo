@@ -551,6 +551,19 @@
         `;
       };
 
+      const GuideLink = ({ href, children }) => {
+        return html`
+          <a
+            href=${href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="guide-link"
+          >
+            ${children}
+          </a>
+        `;
+      };
+
       const ApiSetupGuide = () => {
         const isGuideExpanded = useStore($isGuideExpanded);
 
@@ -569,26 +582,18 @@
                   <strong>Google Cloud アカウント作成</strong>
                   <br />
                   Google Cloud アカウントがない場合は
-                  <a
-                    href="https://console.cloud.google.com/freetrial"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="guide-link"
-                    >こちら</a
-                  >
+                  <${GuideLink} href="https://console.cloud.google.com/freetrial">
+                    こちら
+                  <//>
                   から無料アカウントを作成
                 </div>
 
                 <div className="guide-step">
                   <strong>プロジェクト作成・選択</strong>
                   <br />
-                  <a
-                    href="https://console.cloud.google.com/projectselector2/home/dashboard"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="guide-link"
-                    >Google Cloud Console</a
-                  >
+                  <${GuideLink} href="https://console.cloud.google.com/projectselector2/home/dashboard">
+                    Google Cloud Console
+                  <//>
                   で新しいプロジェクトを作成するか、既存のプロジェクトを選択
                 </div>
 
@@ -606,24 +611,17 @@
                 <div className="guide-step">
                   <strong>Translation API 有効化</strong>
                   <br />
-                  <a
-                    href="https://console.cloud.google.com/flows/enableapi?apiid=translate.googleapis.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="guide-link"
-                    >Translation API を有効化</a
-                  >
+                  <${GuideLink} href="https://console.cloud.google.com/flows/enableapi?apiid=translate.googleapis.com">
+                    Translation API を有効化
+                  <//>
                 </div>
 
                 <div className="guide-step">
                   <strong>APIキー作成</strong>
                   <br />
-                  <a
-                    href="https://console.cloud.google.com/apis/credentials"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="guide-link"
-                    >認証情報ページ</a>
+                  <${GuideLink} href="https://console.cloud.google.com/apis/credentials">
+                    認証情報ページ
+                  <//>
                   ➔ 「認証情報を作成」➔ 「APIキー」を選択
                 </div>
 
