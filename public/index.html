@@ -140,6 +140,50 @@
         justify-content: center;
       }
 
+      .camera-select {
+        padding: 8px 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+        margin-bottom: 10px;
+      }
+
+      .camera-select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+            .camera-select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 14px;
+        background-color: white;
+        color: #333;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+      }
+
+      .camera-select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .camera-select:disabled {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      .camera-select option {
+        padding: 10px;
+      }
+
       .camera-button {
         padding: 12px 24px;
         background: linear-gradient(135deg, #667eea, #764ba2);
@@ -320,6 +364,7 @@
         padding: 15px;
         border-radius: 8px;
         margin-top: 15px;
+        border: 1px solid #fecaca;
       }
 
       .loading {
@@ -641,6 +686,8 @@
       const $ocrText = atom("");
       const $translatedOcrText = atom("");
       const $isOcrLoading = atom(false);
+      const $cameraDevices = atom([]);
+      const $selectedCameraId = atom(localStorage.getItem("selectedCameraId") || null);
 
       $apiKey.subscribe((apiKey) => {
         if (apiKey) {
@@ -654,6 +701,12 @@
 
       $activeTab.subscribe((tab) => {
         localStorage.setItem("activeTab", tab);
+      });
+
+      $selectedCameraId.subscribe((cameraId) => {
+        if (cameraId) {
+          localStorage.setItem("selectedCameraId", cameraId);
+        }
       });
 
       // #endregion
@@ -672,6 +725,58 @@
       const setOcrText = (text) => $ocrText.set(text);
       const setTranslatedOcrText = (text) => $translatedOcrText.set(text);
       const setOcrLoading = (loading) => $isOcrLoading.set(loading);
+      const setCameraDevices = (devices) => $cameraDevices.set(devices);
+      const setSelectedCameraId = (id) => $selectedCameraId.set(id);
+
+      const getCameraDevices = async () => {
+        try {
+          await navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+              stream.getTracks().forEach(track => track.stop());
+            });
+
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter(device => device.kind === 'videoinput');
+          setCameraDevices(videoDevices);
+
+          if (videoDevices.length > 0 && !$selectedCameraId.get()) {
+            setSelectedCameraId(videoDevices[0].deviceId);
+          }
+        } catch (err) {
+          console.error("Camera enumeration error:", err);
+          setError(`カメラ検出エラー: ${err.message}`);
+        }
+      };
+
+      const startCamera = async () => {
+        try {
+          if ($cameraDevices.get().length === 0) {
+            await getCameraDevices();
+          }
+
+          const selectedCameraId = $selectedCameraId.get();
+          const constraints = {
+            video: {
+              width: { ideal: 640 },
+              height: { ideal: 480 },
+              facingMode: 'environment'
+            }
+          };
+
+          if (selectedCameraId) {
+            constraints.video.deviceId = { exact: selectedCameraId };
+            delete constraints.video.facingMode;
+          }
+
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          setCameraStream(stream);
+          setIsCameraActive(true);
+          setError("");
+        } catch (err) {
+          console.error("Camera error:", err);
+          setError(`カメラアクセスエラー: ${err.message}`);
+        }
+      };
 
       const translate = async () => {
         const japaneseText = $japaneseText.get();
@@ -698,24 +803,6 @@
           setError(`翻訳エラー: ${err.message}`);
         } finally {
           setLoading(false);
-        }
-      };
-
-      const startCamera = async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              width: { ideal: 640 },
-              height: { ideal: 480 },
-              facingMode: 'environment'
-            }
-          });
-          setCameraStream(stream);
-          setIsCameraActive(true);
-          setError("");
-        } catch (err) {
-          console.error("Camera error:", err);
-          setError(`カメラアクセスエラー: ${err.message}`);
         }
       };
 
@@ -753,11 +840,13 @@
 
         try {
           const detectedText = await performOCR(imageData, apiKey);
-          setOcrText(detectedText);
 
           if (detectedText.trim()) {
+            setOcrText(detectedText);
             const translatedText = await translateText(detectedText, apiKey);
             setTranslatedOcrText(translatedText);
+          } else {
+            setError("画像からテキストを検出できませんでした。文字がはっきりと写っている画像を撮影してください。");
           }
         } catch (err) {
           console.error("OCR/Translation error:", err);
@@ -897,6 +986,8 @@
         const ocrText = useStore($ocrText);
         const translatedOcrText = useStore($translatedOcrText);
         const isOcrLoading = useStore($isOcrLoading);
+        const cameraDevices = useStore($cameraDevices);
+        const selectedCameraId = useStore($selectedCameraId);
 
         const { useEffect } = window.preactHooks || {};
 
@@ -907,11 +998,32 @@
           }
         }, [cameraStream]);
 
+        // 初回ロード時にカメラデバイスを取得
+        useEffect(() => {
+          if (!isCameraActive) {
+            getCameraDevices();
+          }
+        }, []);
+
         const handleCameraToggle = () => {
           if (isCameraActive) {
             stopCamera();
           } else {
             startCamera();
+          }
+        };
+
+        const handleCameraChange = (e) => {
+          const newCameraId = e.target.value;
+          setSelectedCameraId(newCameraId);
+
+          // カメラが動作中の場合は、新しいカメラで再開
+          if (isCameraActive) {
+            stopCamera();
+            // 少し待ってから新しいカメラを開始
+            setTimeout(() => {
+              startCamera();
+            }, 100);
           }
         };
 
@@ -922,6 +1034,22 @@
                 <div className="permissions-message">
                   カメラを使用するには、ブラウザの許可が必要です
                 </div>
+              `}
+
+              ${cameraDevices.length > 1 && html`
+                <select
+                  className="camera-select"
+                  value=${selectedCameraId || ''}
+                  onChange=${handleCameraChange}
+                  disabled=${isOcrLoading}
+                >
+                  <option value="">カメラを選択してください</option>
+                  ${cameraDevices.map(device => html`
+                    <option key=${device.deviceId} value=${device.deviceId}>
+                      ${device.label || `カメラ ${device.deviceId.slice(0, 8)}...`}
+                    </option>
+                  `)}
+                </select>
               `}
 
               <video
