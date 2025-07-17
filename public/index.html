@@ -377,7 +377,16 @@
 
       const getInitialApiKey = () => {
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get("apikey") || localStorage.getItem("googleTranslateApiKey") || "";
+        const apiKeyFromUrl = urlParams.get("apikey");
+
+        if (apiKeyFromUrl) {
+          urlParams.delete("apikey");
+          const newUrl = new URL(window.location.href);
+          newUrl.search = urlParams.toString();
+          window.history.replaceState({}, '', newUrl.toString());
+        }
+
+        return apiKeyFromUrl || localStorage.getItem("googleTranslateApiKey") || "";
       };
 
       const translateText = async (japaneseText, apiKey) => {
