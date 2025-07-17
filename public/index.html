@@ -226,6 +226,69 @@
         margin: 20px 0;
       }
 
+      .image-overlay-container {
+        position: relative;
+        display: inline-block;
+        margin: 20px 0;
+      }
+
+      .overlay-text {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.95);
+        color: #333;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(102, 126, 234, 0.3);
+        max-width: 200px;
+        word-wrap: break-word;
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      .overlay-text.original {
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(102, 126, 234, 0.5);
+      }
+
+      .overlay-text.translated {
+        background: rgba(102, 126, 234, 0.95);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .overlay-toggle {
+        margin-bottom: 15px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .overlay-toggle button {
+        padding: 8px 16px;
+        border: 2px solid #667eea;
+        border-radius: 6px;
+        background: white;
+        color: #667eea;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .overlay-toggle button.active {
+        background: #667eea;
+        color: white;
+      }
+
+      .overlay-toggle button:hover {
+        background: #667eea;
+        color: white;
+      }
+
       .ocr-result {
         background: #f8f9fa;
         padding: 20px;
@@ -552,6 +615,22 @@
           width: 100%;
           max-width: 300px;
         }
+
+        .overlay-text {
+          font-size: 10px;
+          padding: 2px 4px;
+          max-width: 150px;
+        }
+
+        .overlay-toggle {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .overlay-toggle button {
+          width: 100%;
+          max-width: 200px;
+        }
       }
     </style>
     <script type="importmap">
@@ -624,6 +703,35 @@
         return data.data.translations[0].translatedText;
       };
 
+      const translateTextBatch = async (textArray, apiKey) => {
+        const response = await fetch(
+          `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              q: textArray,
+              source: "ja",
+              target: "en",
+              format: "text",
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error?.message ||
+              `HTTP error! status: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+        return data.data.translations.map(translation => translation.translatedText);
+      };
+
       const performOCR = async (imageData, apiKey) => {
         const response = await fetch(
           `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
@@ -656,7 +764,36 @@
 
         const data = await response.json();
         const textAnnotation = data.responses[0]?.fullTextAnnotation;
-        return textAnnotation?.text || "";
+
+        const textBlocks = [];
+        if (textAnnotation?.pages) {
+          for (const page of textAnnotation.pages) {
+            for (const block of page.blocks) {
+              let blockText = "";
+              for (const paragraph of block.paragraphs) {
+                for (const word of paragraph.words) {
+                  for (const symbol of word.symbols) {
+                    blockText += symbol.text;
+                  }
+                  blockText += " ";
+                }
+                blockText += "\n";
+              }
+
+              if (blockText.trim()) {
+                textBlocks.push({
+                  text: blockText.trim(),
+                  boundingPoly: block.boundingBox
+                });
+              }
+            }
+          }
+        }
+
+        return {
+          fullText: textAnnotation?.text || "",
+          textBlocks: textBlocks
+        };
       };
 
       const captureImageFromVideo = (video) => {
@@ -688,6 +825,8 @@
       const $isOcrLoading = atom(false);
       const $cameraDevices = atom([]);
       const $selectedCameraId = atom(localStorage.getItem("selectedCameraId") || null);
+      const $ocrTextBlocks = atom([]);
+      const $overlayMode = atom(localStorage.getItem("overlayMode") || "translated"); // "original", "translated"
 
       $apiKey.subscribe((apiKey) => {
         if (apiKey) {
@@ -709,6 +848,10 @@
         }
       });
 
+      $overlayMode.subscribe((mode) => {
+        localStorage.setItem("overlayMode", mode);
+      });
+
       // #endregion
       // #region グローバルアクション
 
@@ -727,6 +870,8 @@
       const setOcrLoading = (loading) => $isOcrLoading.set(loading);
       const setCameraDevices = (devices) => $cameraDevices.set(devices);
       const setSelectedCameraId = (id) => $selectedCameraId.set(id);
+      const setOcrTextBlocks = (blocks) => $ocrTextBlocks.set(blocks);
+      const setOverlayMode = (mode) => $overlayMode.set(mode);
 
       const getCameraDevices = async () => {
         try {
@@ -837,14 +982,27 @@
         setError("");
         setOcrText("");
         setTranslatedOcrText("");
+        setOcrTextBlocks([]);
 
         try {
-          const detectedText = await performOCR(imageData, apiKey);
+          const ocrResult = await performOCR(imageData, apiKey);
 
-          if (detectedText.trim()) {
-            setOcrText(detectedText);
-            const translatedText = await translateText(detectedText, apiKey);
-            setTranslatedOcrText(translatedText);
+          if (ocrResult.fullText.trim()) {
+            setOcrText(ocrResult.fullText);
+
+            const textArray = ocrResult.textBlocks.map(block => block.text);
+            const translatedTexts = await translateTextBatch(textArray, apiKey);
+
+            const translatedBlocks = ocrResult.textBlocks.map((block, index) => ({
+              ...block,
+              translatedText: translatedTexts[index]
+            }));
+
+            setOcrTextBlocks(translatedBlocks);
+
+            // 全体の翻訳結果も設定
+            const fullTranslation = await translateText(ocrResult.fullText, apiKey);
+            setTranslatedOcrText(fullTranslation);
           } else {
             setError("画像からテキストを検出できませんでした。文字がはっきりと写っている画像を撮影してください。");
           }
@@ -988,6 +1146,8 @@
         const isOcrLoading = useStore($isOcrLoading);
         const cameraDevices = useStore($cameraDevices);
         const selectedCameraId = useStore($selectedCameraId);
+        const ocrTextBlocks = useStore($ocrTextBlocks);
+        const overlayMode = useStore($overlayMode);
 
         const { useEffect } = window.preactHooks || {};
 
@@ -1081,6 +1241,39 @@
                 `}
               </div>
 
+              ${$capturedImage.get() && ocrTextBlocks.length > 0 && html`
+                <div className="overlay-toggle">
+                  <button
+                    className=${overlayMode === "original" ? "active" : ""}
+                    onClick=${() => setOverlayMode("original")}
+                  >
+                    原文表示
+                  </button>
+                  <button
+                    className=${overlayMode === "translated" ? "active" : ""}
+                    onClick=${() => setOverlayMode("translated")}
+                  >
+                    翻訳表示
+                  </button>
+                </div>
+              `}
+
+              ${$capturedImage.get() && html`
+                ${ocrTextBlocks.length > 0 ? html`
+                  <${ImageWithOverlay}
+                    imageData=${$capturedImage.get()}
+                    textBlocks=${ocrTextBlocks}
+                    overlayMode=${overlayMode}
+                  />
+                ` : html`
+                  <img
+                    src=${$capturedImage.get()}
+                    alt="Captured"
+                    className="captured-image"
+                  />
+                `}
+              `}
+
               ${ocrText && html`
                 <div className="ocr-result">
                   <h4>検出されたテキスト</h4>
@@ -1102,6 +1295,78 @@
                 </div>
               `}
             </div>
+          </div>
+        `;
+      };
+
+      const ImageWithOverlay = ({ imageData, textBlocks, overlayMode }) => {
+        const { useEffect } = window.preactHooks || {};
+
+        useEffect(() => {
+          // 画像のサイズを取得して座標を調整
+          const img = document.querySelector('.overlay-image');
+          if (img && img.complete) {
+            updateOverlayPositions(img);
+          }
+        }, [imageData, textBlocks, overlayMode]);
+
+        const updateOverlayPositions = (img) => {
+          const overlays = document.querySelectorAll('.overlay-text');
+          const imgRect = img.getBoundingClientRect();
+          const imgNaturalWidth = img.naturalWidth;
+          const imgNaturalHeight = img.naturalHeight;
+
+          const scaleX = imgRect.width / imgNaturalWidth;
+          const scaleY = imgRect.height / imgNaturalHeight;
+
+          overlays.forEach((overlay, index) => {
+            const block = textBlocks[index];
+            if (block && block.boundingPoly && block.boundingPoly.vertices) {
+              const vertices = block.boundingPoly.vertices;
+              const left = Math.min(...vertices.map(v => v.x || 0)) * scaleX;
+              const top = Math.min(...vertices.map(v => v.y || 0)) * scaleY;
+
+              overlay.style.left = `${left}px`;
+              overlay.style.top = `${top}px`;
+            }
+          });
+        };
+
+        const handleImageLoad = (e) => {
+          updateOverlayPositions(e.target);
+        };
+
+        return html`
+          <div className="image-overlay-container">
+            <img
+              src=${imageData}
+              alt="Captured"
+              className="captured-image overlay-image"
+              onLoad=${handleImageLoad}
+            />
+            ${textBlocks.map((block, index) => {
+              const showOriginal = overlayMode === "original";
+              const showTranslated = overlayMode === "translated";
+
+              return html`
+                ${showOriginal && html`
+                  <div
+                    key=${`original-${index}`}
+                    className="overlay-text original"
+                  >
+                    ${block.text}
+                  </div>
+                `}
+                ${showTranslated && html`
+                  <div
+                    key=${`translated-${index}`}
+                    className="overlay-text translated"
+                  >
+                    ${block.translatedText}
+                  </div>
+                `}
+              `;
+            })}
           </div>
         `;
       };
