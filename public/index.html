@@ -875,11 +875,6 @@
 
       const getCameraDevices = async () => {
         try {
-          await navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-              stream.getTracks().forEach(track => track.stop());
-            });
-
           const devices = await navigator.mediaDevices.enumerateDevices();
           const videoDevices = devices.filter(device => device.kind === 'videoinput');
           setCameraDevices(videoDevices);
@@ -1158,12 +1153,12 @@
           }
         }, [cameraStream]);
 
-        // 初回ロード時にカメラデバイスを取得
+        // カメラが開始されているときのみカメラデバイス一覧を取得
         useEffect(() => {
-          if (!isCameraActive) {
+          if (isCameraActive && cameraDevices.length === 0) {
             getCameraDevices();
           }
-        }, []);
+        }, [isCameraActive]);
 
         const handleCameraToggle = () => {
           if (isCameraActive) {
