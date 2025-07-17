@@ -11,25 +11,10 @@ Google Cloud Translation API を使用して、テキストの翻訳を行いま
 ### 必要な要件
 
 - Node.js
-- pnpm (corepack経由で使用)
+- pnpm
 - Cloudflareアカウント
 
-### 事前準備
-
-1. **Node.js のインストール**
-
-- [Node.js 公式サイト](https://nodejs.org/) からダウンロードしてインストール
-- または [asdf](https://asdf-vm.com/) を使用して Node.js を管理
-
-2. **pnpm の有効化 (corepack使用)**
-
-```bash
-# corepackを有効にする
-corepack enable
-
-# pnpmをインストール
-corepack install
-```
+セットアップ方法の例としては [GUIDE.md](GUIDE.md) を参照してください。
 
 ### インストール
 
