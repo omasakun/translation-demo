@@ -117,7 +117,7 @@ winget install --id pnpm.pnpm
 たとえばこのレポジトリを使う場合は、以下のコマンドをターミナルにコピペして実行してください：
 
 ```
-cd $env:UserProfile\Desktop
+cd "$env:UserProfile\Desktop"
 
 git clone https://github.com/omasakun/translation-demo.git
 cd translation-demo
