@@ -104,11 +104,13 @@
     <script type="importmap">
       {
         "imports": {
-          "preact": "https://esm.sh/preact@10.26.9",
-          "preact/hooks": "https://esm.sh/preact@10.26.9/hooks",
+          "@nanostores/preact": "https://esm.sh/@nanostores/preact@1.0.0",
+          "clsx": "https://esm.sh/clsx@2.1.1",
           "htm/preact": "https://esm.sh/htm@3.1.1/preact",
           "nanostores": "https://esm.sh/nanostores@1.0.1",
-          "@nanostores/preact": "https://esm.sh/@nanostores/preact@1.0.0"
+          "preact": "https://esm.sh/preact@10.26.9",
+          "preact/hooks": "https://esm.sh/preact@10.26.9/hooks",
+          "tailwind-merge": "https://esm.sh/tailwind-merge@3.3.1"
         }
       }
     </script>
@@ -122,9 +124,12 @@
       import { atom } from "nanostores";
       import { useStore } from "@nanostores/preact";
       import { useEffect } from "preact/hooks";
+      import { clsx } from "clsx"
+      import { twMerge } from "tailwind-merge"
 
-      // preact/hooks をグローバルに公開
-      window.preactHooks = { useEffect };
+      const cn = (...args) => {
+        return twMerge(clsx(...args));
+      };
 
       // #region ユーティリティ関数
 
@@ -478,6 +483,119 @@
       };
 
       // #endregion
+      // #region 共通コンポーネント
+
+      const LoadingSpinner = ({ size = "w-5 h-5" }) => {
+        return html`
+          <div className=${cn("inline-block border-4 border-white border-t-transparent rounded-full spin", size)}></div>
+        `;
+      };
+
+      const GradientButton = ({
+        onClick,
+        disabled = false,
+        variant = "primary",
+        className = "",
+        children,
+        title,
+        isLoading = false
+      }) => {
+        const variantClasses = {
+          primary: "gradient-button",
+          secondary: "gradient-secondary",
+          danger: "gradient-danger"
+        };
+
+        return html`
+          <button
+            onClick=${onClick}
+            disabled=${disabled}
+            title=${title}
+            className=${cn(
+              "px-6 py-3 text-white border-none rounded-lg cursor-pointer text-base font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none",
+              variantClasses[variant],
+              className
+            )}
+          >
+            ${isLoading ? html`<${LoadingSpinner} />` : children}
+          </button>
+        `;
+      };
+
+      const InfoBox = ({ variant = "info", title, children, className = "" }) => {
+        const variantClasses = {
+          info: "bg-gray-50 border-gray-200",
+          success: "bg-green-50 border-green-200",
+          warning: "bg-yellow-50 border-yellow-200 text-yellow-800",
+          error: "bg-red-50 border-red-200 text-red-800"
+        };
+
+        const titleClasses = {
+          info: "text-gray-800",
+          success: "text-green-800",
+          warning: "text-yellow-800",
+          error: "text-red-800"
+        };
+
+        return html`
+          <div className=${cn(
+            "p-5 rounded-xl border w-full",
+            variantClasses[variant],
+            className
+          )}>
+            ${title && html`
+              <h4 className=${cn("mb-2.5 text-base font-medium", titleClasses[variant])}>${title}</h4>
+            `}
+            <div className="text-gray-600 leading-relaxed">
+              ${children}
+            </div>
+          </div>
+        `;
+      };
+
+      const TabButton = ({ isActive, onClick, children, disabled = false }) => {
+        return html`
+          <button
+            className=${cn(
+              "px-8 py-4 text-lg font-semibold transition-all duration-300 border-b-4",
+              isActive
+                ? "text-indigo-600 border-indigo-600"
+                : "text-gray-600 border-transparent hover:text-indigo-600 hover:bg-gray-50"
+            )}
+            onClick=${onClick}
+            disabled=${disabled}
+          >
+            ${children}
+          </button>
+        `;
+      };
+
+      const ToggleButton = ({ isActive, onClick, children, disabled = false }) => {
+        return html`
+          <button
+            className=${cn(
+              "px-4 py-2 border-2 border-indigo-500 rounded-md text-sm font-semibold cursor-pointer transition-all duration-300",
+              isActive ? "bg-indigo-500 text-white" : "bg-white text-indigo-500 hover:bg-indigo-500 hover:text-white"
+            )}
+            onClick=${onClick}
+            disabled=${disabled}
+          >
+            ${children}
+          </button>
+        `;
+      };
+
+      const GuideStep = ({ title, children }) => {
+        return html`
+          <div className="guide-step mb-4">
+            <strong className="text-blue-700">${title}</strong>
+            <br />
+            ${children}
+          </div>
+        `;
+      };
+
+      // #endregion
       // #region コンポーネント
 
       const Header = () => {
@@ -494,26 +612,18 @@
 
         return html`
           <div className="flex mb-8 border-b-2 border-gray-200">
-            <button
-              className=${`px-8 py-4 text-lg font-semibold transition-all duration-300 border-b-4 ${
-                activeTab === "text"
-                  ? "text-indigo-600 border-indigo-600"
-                  : "text-gray-600 border-transparent hover:text-indigo-600 hover:bg-gray-50"
-              }`}
+            <${TabButton}
+              isActive=${activeTab === "text"}
               onClick=${() => setActiveTab("text")}
             >
               📝 テキスト翻訳
-            </button>
-            <button
-              className=${`px-8 py-4 text-lg font-semibold transition-all duration-300 border-b-4 ${
-                activeTab === "camera"
-                  ? "text-indigo-600 border-indigo-600"
-                  : "text-gray-600 border-transparent hover:text-indigo-600 hover:bg-gray-50"
-              }`}
+            <//>
+            <${TabButton}
+              isActive=${activeTab === "camera"}
               onClick=${() => setActiveTab("camera")}
             >
               📷 カメラ翻訳
-            </button>
+            <//>
           </div>
         `;
       };
@@ -539,14 +649,15 @@
         const isLoading = useStore($isLoading);
 
         return html`
-          <button
+          <${GradientButton}
             onClick=${translate}
-            className="self-center gradient-button text-white border-none rounded-full w-16 h-16 text-2xl transition-all duration-300 flex items-center justify-center shadow-lg hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-            title="Ctrl+Enter でも翻訳できます"
             disabled=${isLoading}
+            isLoading=${isLoading}
+            title="Ctrl+Enter でも翻訳できます"
+            className="self-center rounded-full w-16 h-16 text-2xl"
           >
-            ${isLoading ? html`<div className="inline-block w-5 h-5 border-4 border-white border-t-transparent rounded-full spin"></div>` : "➔"}
-          </button>
+            ➔
+          <//>
         `;
       };
 
@@ -560,9 +671,10 @@
               onInput=${onInput}
               onKeyDown=${onKeyDown}
               readonly=${readOnly}
-              className=${`w-full min-h-[150px] p-5 border-2 border-gray-200 rounded-xl text-base resize-y transition-all duration-300 leading-relaxed focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 ${
-                readOnly ? 'bg-gray-50 cursor-default' : ''
-              }`}
+              className=${cn(
+                "w-full min-h-[150px] p-5 border-2 border-gray-200 rounded-xl text-base resize-y transition-all duration-300 leading-relaxed focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100",
+                readOnly ? "bg-gray-50 cursor-default" : ""
+              )}
             ></textarea>
           </div>
         `;
@@ -607,7 +719,9 @@
         if (!error) return null;
 
         return html`
-          <div className="bg-red-50 text-red-800 p-4 rounded-lg mt-4 border border-red-200">${error}</div>
+          <${InfoBox} variant="error" className="mt-4">
+            ${error}
+          <//>
         `;
       };
 
@@ -621,8 +735,6 @@
         const selectedCameraId = useStore($selectedCameraId);
         const ocrTextBlocks = useStore($ocrTextBlocks);
         const overlayMode = useStore($overlayMode);
-
-        const { useEffect } = window.preactHooks || {};
 
         useEffect(() => {
           const video = document.getElementById('camera-video');
@@ -664,9 +776,9 @@
           <div className="mb-8">
             <div className="relative flex flex-col items-center gap-5">
               ${!isCameraActive && html`
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-5 text-yellow-800">
+                <${InfoBox} variant="warning" className="mb-5">
                   カメラを使用するには、ブラウザの許可が必要です
-                </div>
+                <//>
               `}
 
               ${cameraDevices.length > 1 && html`
@@ -687,51 +799,48 @@
 
               <video
                 id="camera-video"
-                className="w-full max-w-2xl h-96 rounded-xl bg-gray-50 object-cover"
+                className=${cn(
+                  "w-full max-w-2xl h-96 rounded-xl bg-gray-50 object-cover",
+                  isCameraActive ? "block" : "hidden"
+                )}
                 autoplay
                 muted
                 playsInline
-                style=${`display: ${isCameraActive ? 'block' : 'none'}`}
               ></video>
 
               <div className="flex gap-4 flex-wrap justify-center">
-                <button
-                  className="px-6 py-3 gradient-button text-white border-none rounded-lg cursor-pointer text-base font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                <${GradientButton}
                   onClick=${handleCameraToggle}
                   disabled=${isOcrLoading}
                 >
                   ${isCameraActive ? 'カメラ停止' : 'カメラ開始'}
-                </button>
+                <//>
 
                 ${isCameraActive && html`
-                  <button
-                    className="px-6 py-3 gradient-button text-white border-none rounded-lg cursor-pointer text-base font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                  <${GradientButton}
                     onClick=${captureImage}
                     disabled=${isOcrLoading}
+                    isLoading=${isOcrLoading}
                   >
-                    ${isOcrLoading ? '処理中...' : '撮影・翻訳'}
-                  </button>
+                    撮影・翻訳
+                  <//>
                 `}
               </div>
 
               ${$capturedImage.get() && ocrTextBlocks.length > 0 && html`
                 <div className="mb-4 flex gap-2.5 justify-center flex-wrap">
-                  <button
-                    className=${`px-4 py-2 border-2 border-indigo-500 rounded-md text-sm font-semibold cursor-pointer transition-all duration-300 ${
-                      overlayMode === "original" ? "bg-indigo-500 text-white" : "bg-white text-indigo-500 hover:bg-indigo-500 hover:text-white"
-                    }`}
+                  <${ToggleButton}
+                    isActive=${overlayMode === "original"}
                     onClick=${() => setOverlayMode("original")}
                   >
                     原文表示
-                  </button>
-                  <button
-                    className=${`px-4 py-2 border-2 border-indigo-500 rounded-md text-sm font-semibold cursor-pointer transition-all duration-300 ${
-                      overlayMode === "translated" ? "bg-indigo-500 text-white" : "bg-white text-indigo-500 hover:bg-indigo-500 hover:text-white"
-                    }`}
+                  <//>
+                  <${ToggleButton}
+                    isActive=${overlayMode === "translated"}
                     onClick=${() => setOverlayMode("translated")}
                   >
                     翻訳表示
-                  </button>
+                  <//>
                 </div>
               `}
 
@@ -752,24 +861,21 @@
               `}
 
               ${ocrText && html`
-                <div className="bg-gray-50 p-5 rounded-xl mb-5 w-full">
-                  <h4 className="text-gray-800 mb-2.5 text-base font-medium">検出されたテキスト</h4>
-                  <p className="text-gray-600 leading-relaxed m-0">${ocrText}</p>
-                </div>
+                <${InfoBox} title="検出されたテキスト" className="mb-5">
+                  ${ocrText}
+                <//>
               `}
 
               ${translatedOcrText && html`
-                <div className="bg-gray-50 p-5 rounded-xl mb-5 w-full">
-                  <h4 className="text-gray-800 mb-2.5 text-base font-medium">翻訳結果</h4>
-                  <p className="text-gray-600 leading-relaxed m-0">${translatedOcrText}</p>
-                </div>
+                <${InfoBox} title="翻訳結果" className="mb-5">
+                  ${translatedOcrText}
+                <//>
               `}
 
               ${isOcrLoading && html`
-                <div className="bg-gray-50 p-5 rounded-xl mb-5 w-full">
-                  <h4 className="text-gray-800 mb-2.5 text-base font-medium">⏳ 処理中...</h4>
-                  <p className="text-gray-600 leading-relaxed m-0">画像から文字を読み取り、翻訳しています...</p>
-                </div>
+                <${InfoBox} title="⏳ 処理中..." className="mb-5">
+                  画像から文字を読み取り、翻訳しています...
+                <//>
               `}
             </div>
           </div>
@@ -777,8 +883,6 @@
       };
 
       const ImageWithOverlay = ({ imageData, textBlocks, overlayMode }) => {
-        const { useEffect } = window.preactHooks || {};
-
         useEffect(() => {
           // 画像のサイズを取得して座標を調整
           const img = document.querySelector('.overlay-image');
@@ -868,46 +972,44 @@
           <div className="bg-blue-50 border border-blue-200 rounded-xl mt-4 overflow-hidden">
             <div className="bg-blue-100 px-5 py-4 cursor-pointer flex items-center justify-between transition-colors duration-300 hover:bg-blue-200" onClick=${toggleGuide}>
               <h5 className="m-0 text-blue-700 text-lg font-medium">APIキーの取得方法</h5>
-              <span className=${`text-xl text-blue-700 transition-transform duration-300 guide-toggle ${isGuideExpanded ? "expanded" : ""}`}>
+              <span className=${cn(
+                "text-xl text-blue-700 transition-transform duration-300 guide-toggle",
+                isGuideExpanded ? "expanded" : ""
+              )}>
                 ▼
               </span>
             </div>
 
-            <div className=${`guide-content px-5 ${isGuideExpanded ? "expanded py-5" : "py-0"}`}>
+            <div className=${cn(
+              "guide-content px-5",
+              isGuideExpanded ? "expanded py-5" : "py-0"
+            )}>
               <div className="guide-steps">
-                <div className="guide-step mb-4">
-                  <strong className="text-blue-700">Google Cloud アカウント作成</strong>
-                  <br />
+                <${GuideStep} title="Google Cloud アカウント作成">
                   Google Cloud アカウントがない場合は
                   <${GuideLink} href="https://console.cloud.google.com/freetrial">
                     こちら
                   <//>
                   から無料アカウントを作成
-                </div>
+                <//>
 
-                <div className="guide-step mb-4">
-                  <strong className="text-blue-700">プロジェクト作成・選択</strong>
-                  <br />
+                <${GuideStep} title="プロジェクト作成・選択">
                   <${GuideLink} href="https://console.cloud.google.com/projectselector2/home/dashboard">
                     Google Cloud Console
                   <//>
                   で新しいプロジェクトを作成するか、既存のプロジェクトを選択
-                </div>
+                <//>
 
-                <div className="guide-step mb-4">
-                  <strong className="text-blue-700">請求先アカウント設定</strong>
-                  <br />
+                <${GuideStep} title="請求先アカウント設定">
                   プロジェクトに請求先アカウントを設定（無料枠内でも利用可能）
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 my-2.5">
-                    <p className="m-0 text-red-700 text-sm">
+                  <${InfoBox} variant="error" className="my-2.5">
+                    <p className="m-0 text-sm">
                       ⚠️ Translation API は月50万文字まで、Vision API は月1000回まで無料です
                     </p>
-                  </div>
-                </div>
+                  <//>
+                <//>
 
-                <div className="guide-step mb-4">
-                  <strong className="text-blue-700">API の有効化</strong>
-                  <br />
+                <${GuideStep} title="API の有効化">
                   以下の2つのAPIを有効化してください：
                   <br />
                   • <${GuideLink} href="https://console.cloud.google.com/flows/enableapi?apiid=translate.googleapis.com">
@@ -917,32 +1019,26 @@
                   • <${GuideLink} href="https://console.cloud.google.com/flows/enableapi?apiid=vision.googleapis.com">
                     Vision API
                   <//>
-                </div>
+                <//>
 
-                <div className="guide-step mb-4">
-                  <strong className="text-blue-700">APIキー作成</strong>
-                  <br />
+                <${GuideStep} title="APIキー作成">
                   <${GuideLink} href="https://console.cloud.google.com/apis/credentials">
                     認証情報ページ
                   <//>
                   ➔ 「認証情報を作成」➔ 「APIキー」を選択
-                </div>
+                <//>
 
-                <div className="guide-step mb-4">
-                  <strong className="text-blue-700">APIキー制限設定（推奨）</strong>
-                  <br />
+                <${GuideStep} title="APIキー制限設定（推奨）">
                   セキュリティのため、APIキーに制限を設定:
                   <br />
                   • API制限: Cloud Translation API と Cloud Vision API
                   <br />
                   • アプリケーション制限: HTTPリファラー（必要に応じて）
-                </div>
+                <//>
 
-                <div className="guide-step mb-4">
-                  <strong className="text-blue-700">APIキーをコピー</strong>
-                  <br />
+                <${GuideStep} title="APIキーをコピー">
                   作成されたAPIキー（AIzaSy...の文字列）をコピーして、上記の入力欄に貼り付け
-                </div>
+                <//>
               </div>
             </div>
           </div>
@@ -953,43 +1049,42 @@
         const activeTab = useStore($activeTab);
 
         return html`
-          <div className="bg-blue-50 p-5 rounded-xl mt-5">
-            <h4 className="text-blue-700 mb-2.5 text-lg font-medium">使い方</h4>
+          <${InfoBox} variant="info" title="使い方" className="mt-5">
             ${activeTab === "text" && html`
-              <p className="text-gray-600 leading-relaxed mb-2">
+              <p className="mb-2">
                 1. Google Cloud Console でAPIキーを取得してください
               </p>
-              <p className="text-gray-600 leading-relaxed mb-2">
+              <p className="mb-2">
                 2.
                 上記のAPIキー欄にキーを入力してください（ブラウザに保存されます）
               </p>
-              <p className="text-gray-600 leading-relaxed mb-2">
+              <p className="mb-2">
                 3.
                 日本語テキストを入力し、➔ボタンをクリックまたはCtrl+Enterで翻訳
               </p>
             `}
             ${activeTab === "camera" && html`
-              <p className="text-gray-600 leading-relaxed mb-2">
+              <p className="mb-2">
                 1. Google Cloud Console で Translation API と Vision API
                 を有効にし、APIキーを取得してください
               </p>
-              <p className="text-gray-600 leading-relaxed mb-2">
+              <p className="mb-2">
                 2.
                 上記のAPIキー欄にキーを入力してください（ブラウザに保存されます）
               </p>
-              <p className="text-gray-600 leading-relaxed mb-2">
+              <p className="mb-2">
                 3.
                 「カメラ開始」ボタンでカメラを起動し、「撮影・翻訳」ボタンで画像を撮影・翻訳
               </p>
-              <p className="text-gray-600 leading-relaxed mb-2">
+              <p className="mb-2">
                 4.
                 撮影した画像から日本語テキストを検出し、自動で英語に翻訳します
               </p>
             `}
-            <p className="text-gray-600 leading-relaxed mb-2">💡 APIキーはURLパラメータでも指定可能です: ?apikey=YOUR_API_KEY</p>
+            <p className="mb-2">💡 APIキーはURLパラメータでも指定可能です: ?apikey=YOUR_API_KEY</p>
 
             <${ApiSetupGuide} />
-          </div>
+          <//>
         `;
       };
 
@@ -1002,11 +1097,15 @@
             <${ApiKeySection} />
             <${TabContainer} />
 
-            <div className=${`${activeTab === "text" ? "block" : "hidden"}`}>
+            <div className=${cn(
+              activeTab === "text" ? "block" : "hidden"
+            )}>
               <${TranslationSection} />
             </div>
 
-            <div className=${`${activeTab === "camera" ? "block" : "hidden"}`}>
+            <div className=${cn(
+              activeTab === "camera" ? "block" : "hidden"
+            )}>
               <${CameraSection} />
             </div>
 
