@@ -1118,19 +1118,6 @@
       // #endregion
 
       render(html`<${TranslationApp} />`, document.getElementById("app"));
-
-      // PWA: Service Worker の登録
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('SW registered: ', registration);
-            })
-            .catch((registrationError) => {
-              console.log('SW registration failed: ', registrationError);
-            });
-        });
-      }
     </script>
   </body>
 </html>
