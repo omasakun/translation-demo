@@ -23,491 +23,41 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          "Helvetica Neue", Arial, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 20px;
-        color: #333;
-      }
-
-      .container {
-        max-width: 1000px;
-        margin: 0 auto;
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        padding: 40px;
-      }
-
-      .header {
-        text-align: center;
-        margin-bottom: 40px;
-      }
-
-      .header h1 {
-        font-size: 2.5rem;
+      .gradient-text {
         background: linear-gradient(135deg, #667eea, #764ba2);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 10px;
       }
 
-      .header p {
-        color: #666;
-        font-size: 1.1rem;
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       }
 
-      .tab-container {
-        display: flex;
-        margin-bottom: 30px;
-        border-bottom: 2px solid #e1e5e9;
-      }
-
-      .tab {
-        padding: 15px 30px;
-        cursor: pointer;
-        background: none;
-        border: none;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #666;
-        transition: all 0.3s ease;
-        border-bottom: 3px solid transparent;
-      }
-
-      .tab.active {
-        color: #667eea;
-        border-bottom-color: #667eea;
-      }
-
-      .tab:hover {
-        color: #667eea;
-        background: #f8f9fa;
-      }
-
-      .tab-content {
-        display: none;
-      }
-
-      .tab-content.active {
-        display: block;
-      }
-
-      .camera-section {
-        margin-bottom: 30px;
-      }
-
-      .camera-container {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-      }
-
-      .camera-video {
-        width: 100%;
-        max-width: 640px;
-        height: 480px;
-        border-radius: 12px;
-        background: #f8f9fa;
-        object-fit: cover;
-      }
-
-      .camera-canvas {
-        display: none;
-        width: 100%;
-        max-width: 640px;
-        height: 480px;
-        border-radius: 12px;
-        background: #f8f9fa;
-      }
-
-      .camera-controls {
-        display: flex;
-        gap: 15px;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-
-      .camera-select {
-        padding: 8px 12px;
-        border: 2px solid #e1e5e9;
-        border-radius: 8px;
-        background: white;
-        font-size: 14px;
-        cursor: pointer;
-        transition: border-color 0.3s ease;
-        margin-bottom: 10px;
-      }
-
-      .camera-select:focus {
-        outline: none;
-        border-color: #667eea;
-      }
-
-            .camera-select {
-        width: 100%;
-        padding: 12px;
-        border: 2px solid #e1e5e9;
-        border-radius: 8px;
-        font-size: 14px;
-        background-color: white;
-        color: #333;
-        margin-bottom: 15px;
-        cursor: pointer;
-        transition: border-color 0.3s ease;
-      }
-
-      .camera-select:focus {
-        outline: none;
-        border-color: #667eea;
-      }
-
-      .camera-select:disabled {
-        background-color: #f5f5f5;
-        cursor: not-allowed;
-        opacity: 0.7;
-      }
-
-      .camera-select option {
-        padding: 10px;
-      }
-
-      .camera-button {
-        padding: 12px 24px;
+      .gradient-button {
         background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
       }
 
-      .camera-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-      }
-
-      .camera-button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-      }
-
-      .camera-button.secondary {
+      .gradient-secondary {
         background: linear-gradient(135deg, #6c757d, #495057);
       }
 
-      .camera-button.danger {
+      .gradient-danger {
         background: linear-gradient(135deg, #dc3545, #c82333);
       }
 
-      .captured-image {
-        max-width: 100%;
-        max-height: 400px;
-        border-radius: 12px;
-        border: 2px solid #e1e5e9;
-        margin: 20px 0;
-      }
-
-      .image-overlay-container {
-        position: relative;
-        display: inline-block;
-        margin: 20px 0;
-      }
-
-      .overlay-text {
-        position: absolute;
-        background: rgba(255, 255, 255, 0.95);
-        color: #333;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 600;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(102, 126, 234, 0.3);
-        max-width: 200px;
-        word-wrap: break-word;
-        z-index: 10;
-        pointer-events: none;
-      }
-
-      .overlay-text.original {
-        background: rgba(255, 255, 255, 0.95);
-        border-color: rgba(102, 126, 234, 0.5);
-      }
-
-      .overlay-text.translated {
-        background: rgba(102, 126, 234, 0.95);
-        color: white;
-        border-color: rgba(255, 255, 255, 0.3);
-      }
-
-      .overlay-toggle {
-        margin-bottom: 15px;
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-
-      .overlay-toggle button {
-        padding: 8px 16px;
-        border: 2px solid #667eea;
-        border-radius: 6px;
-        background: white;
-        color: #667eea;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-
-      .overlay-toggle button.active {
-        background: #667eea;
-        color: white;
-      }
-
-      .overlay-toggle button:hover {
-        background: #667eea;
-        color: white;
-      }
-
-      .ocr-result {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-      }
-
-      .ocr-result h4 {
-        color: #333;
-        margin-bottom: 10px;
-      }
-
-      .ocr-result p {
-        color: #666;
-        line-height: 1.6;
-        margin: 0;
-      }
-
-      .permissions-message {
-        background: #fff3cd;
-        border: 1px solid #ffeaa7;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 20px;
-        color: #856404;
-      }
-
-      .translation-section {
-        display: grid;
-        grid-template-columns: 1fr 80px 1fr;
-        gap: 20px;
-        align-items: start;
-        margin-bottom: 30px;
-      }
-
-      .input-section,
-      .output-section {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .label {
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 10px;
-        font-size: 1.1rem;
-      }
-
-      .textarea {
-        width: 100%;
-        min-height: 150px;
-        padding: 20px;
-        border: 2px solid #e1e5e9;
-        border-radius: 12px;
-        font-size: 16px;
-        font-family: inherit;
-        resize: vertical;
-        transition: all 0.3s ease;
-        line-height: 1.6;
-      }
-
-      .textarea:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-      }
-
-      .textarea[readonly] {
-        background-color: #f8f9fa;
-        cursor: default;
-      }
-
-      .translate-button {
-        align-self: center;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        cursor: pointer;
-        font-size: 24px;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-      }
-
-      .translate-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-      }
-
-      .translate-button:active {
-        transform: translateY(0);
-      }
-
-      .translate-button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-      }
-
-      .api-key-section {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 30px;
-      }
-
-      .api-key-section h3 {
-        color: #333;
-        margin-bottom: 15px;
-        font-size: 1.2rem;
-      }
-
-      .api-key-input {
-        width: 100%;
-        padding: 15px;
-        border: 2px solid #e1e5e9;
-        border-radius: 8px;
-        font-size: 14px;
-        font-family: "Monaco", "Consolas", monospace;
-        transition: border-color 0.3s ease;
-      }
-
-      .api-key-input:focus {
-        outline: none;
-        border-color: #667eea;
-      }
-
-      .error-message {
-        background: #fee;
-        color: #c33;
-        padding: 15px;
-        border-radius: 8px;
-        margin-top: 15px;
-        border: 1px solid #fecaca;
-      }
-
-      .loading {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #667eea;
-        border-radius: 50%;
+      .spin {
         animation: spin 1s linear infinite;
       }
 
       @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-
-      .usage-info {
-        background: #e8f4fd;
-        padding: 20px;
-        border-radius: 12px;
-        margin-top: 20px;
-      }
-
-      .usage-info h4 {
-        color: #1976d2;
-        margin-bottom: 10px;
-      }
-
-      .usage-info p {
-        color: #666;
-        line-height: 1.6;
-        margin-bottom: 8px;
-      }
-
-      .usage-info a {
-        color: #2196f3;
-        text-decoration: none;
-      }
-
-      .usage-info a:hover {
-        text-decoration: underline;
-      }
-
-      .api-setup-guide {
-        background: #e8f4fd;
-        border: 1px solid #90cdf4;
-        border-radius: 12px;
-        margin-top: 15px;
-        overflow: hidden;
-      }
-
-      .guide-header {
-        background: #bee3f8;
-        padding: 15px 20px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        transition: background-color 0.3s ease;
-      }
-
-      .guide-header:hover {
-        background: #90cdf4;
-      }
-
-      .guide-header h5 {
-        margin: 0;
-        color: #1976d2;
-        font-size: 1.1rem;
-      }
-
-      .guide-toggle {
-        font-size: 1.2rem;
-        color: #1976d2;
-        transition: transform 0.3s ease;
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
 
       .guide-toggle.expanded {
@@ -515,122 +65,40 @@
       }
 
       .guide-content {
-        padding: 0 20px;
+        transition: all 0.3s ease;
         max-height: 0;
         overflow: hidden;
-        transition: all 0.3s ease;
       }
 
       .guide-content.expanded {
         max-height: 1000px;
-        padding: 20px;
       }
 
       .guide-step {
-        margin-bottom: 15px;
-        padding-left: 25px;
+        counter-increment: step-counter;
         position: relative;
+        padding-left: 1.6em;
       }
 
       .guide-step::before {
         content: counter(step-counter);
-        counter-increment: step-counter;
         position: absolute;
-        left: 0px;
-        top: 5px;
-        background: #2196f3;
+        left: 0;
+        top: 0.3em;
+        background: #2b7fff;
         color: white;
-        width: 18px;
-        height: 18px;
+        width: 1.5em;
+        height: 1.5em;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
+        font-size: 0.8em;
         font-weight: bold;
       }
 
       .guide-steps {
         counter-reset: step-counter;
-      }
-
-      .guide-step strong {
-        color: #1976d2;
-      }
-
-      .guide-link {
-        color: #2196f3;
-        text-decoration: none;
-        font-weight: 500;
-      }
-
-      .guide-link:hover {
-        text-decoration: underline;
-      }
-
-      .warning-box {
-        background: #fff5f5;
-        border: 1px solid #feb2b2;
-        border-radius: 8px;
-        padding: 12px;
-        margin: 10px 0;
-      }
-
-      .warning-box p {
-        margin: 0;
-        color: #c53030;
-        font-size: 0.9rem;
-      }
-
-      @media (max-width: 768px) {
-        .translation-section {
-          grid-template-columns: 1fr;
-          grid-template-rows: auto auto auto;
-          gap: 20px;
-        }
-
-        .translate-button {
-          justify-self: center;
-        }
-
-        .container {
-          padding: 20px;
-        }
-
-        .header h1 {
-          font-size: 2rem;
-        }
-
-        .camera-video,
-        .camera-canvas {
-          height: 360px;
-        }
-
-        .camera-controls {
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .camera-button {
-          width: 100%;
-          max-width: 300px;
-        }
-
-        .overlay-text {
-          font-size: 10px;
-          padding: 2px 4px;
-          max-width: 150px;
-        }
-
-        .overlay-toggle {
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .overlay-toggle button {
-          width: 100%;
-          max-width: 200px;
-        }
       }
     </style>
     <script type="importmap">
@@ -645,7 +113,7 @@
       }
     </script>
   </head>
-  <body>
+  <body class="min-h-screen p-5 text-gray-800 gradient-bg">
     <div id="app"></div>
 
     <script type="module">
@@ -1014,9 +482,9 @@
 
       const Header = () => {
         return html`
-          <div className="header">
-            <h1>日本語⇄英語翻訳</h1>
-            <p>Google Translation API / Vision API を使用した翻訳アプリ</p>
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-bold gradient-text mb-2">日本語⇄英語翻訳</h1>
+            <p className="text-gray-600 text-lg">Google Translation API / Vision API を使用した翻訳アプリ</p>
           </div>
         `;
       };
@@ -1025,15 +493,23 @@
         const activeTab = useStore($activeTab);
 
         return html`
-          <div className="tab-container">
+          <div className="flex mb-8 border-b-2 border-gray-200">
             <button
-              className=${`tab ${activeTab === "text" ? "active" : ""}`}
+              className=${`px-8 py-4 text-lg font-semibold transition-all duration-300 border-b-4 ${
+                activeTab === "text"
+                  ? "text-indigo-600 border-indigo-600"
+                  : "text-gray-600 border-transparent hover:text-indigo-600 hover:bg-gray-50"
+              }`}
               onClick=${() => setActiveTab("text")}
             >
               📝 テキスト翻訳
             </button>
             <button
-              className=${`tab ${activeTab === "camera" ? "active" : ""}`}
+              className=${`px-8 py-4 text-lg font-semibold transition-all duration-300 border-b-4 ${
+                activeTab === "camera"
+                  ? "text-indigo-600 border-indigo-600"
+                  : "text-gray-600 border-transparent hover:text-indigo-600 hover:bg-gray-50"
+              }`}
               onClick=${() => setActiveTab("camera")}
             >
               📷 カメラ翻訳
@@ -1046,14 +522,14 @@
         const apiKey = useStore($apiKey);
 
         return html`
-          <div className="api-key-section">
-            <h3>Google API キー</h3>
+          <div className="bg-gray-50 p-5 rounded-xl mb-8">
+            <h3 className="text-gray-800 mb-4 text-xl font-medium">Google API キー</h3>
             <input
               type="password"
               placeholder="AIzaSy..."
               value=${apiKey}
               onInput=${(e) => setApiKey(e.target.value)}
-              className="api-key-input"
+              className="w-full p-4 border-2 border-gray-200 rounded-lg text-sm font-mono transition-colors duration-300 focus:outline-none focus:border-indigo-500"
             />
           </div>
         `;
@@ -1065,26 +541,28 @@
         return html`
           <button
             onClick=${translate}
-            className="translate-button"
+            className="self-center gradient-button text-white border-none rounded-full w-16 h-16 text-2xl transition-all duration-300 flex items-center justify-center shadow-lg hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
             title="Ctrl+Enter でも翻訳できます"
             disabled=${isLoading}
           >
-            ${isLoading ? html`<div className="loading"></div>` : "➔"}
+            ${isLoading ? html`<div className="inline-block w-5 h-5 border-4 border-white border-t-transparent rounded-full spin"></div>` : "➔"}
           </button>
         `;
       };
 
       const TextArea = ({ label, placeholder, value, onInput, onKeyDown, readOnly = false }) => {
         return html`
-          <div className=${readOnly ? "output-section" : "input-section"}>
-            <div className="label">${label}</div>
+          <div className="flex flex-col">
+            <div className="font-semibold text-gray-800 mb-2.5 text-lg">${label}</div>
             <textarea
               placeholder=${placeholder}
               value=${value}
               onInput=${onInput}
               onKeyDown=${onKeyDown}
               readonly=${readOnly}
-              className="textarea"
+              className=${`w-full min-h-[150px] p-5 border-2 border-gray-200 rounded-xl text-base resize-y transition-all duration-300 leading-relaxed focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 ${
+                readOnly ? 'bg-gray-50 cursor-default' : ''
+              }`}
             ></textarea>
           </div>
         `;
@@ -1102,7 +580,7 @@
         };
 
         return html`
-          <div className="translation-section">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_80px_1fr] gap-5 items-start mb-8">
             <${TextArea}
               label="日本語"
               placeholder="翻訳したい日本語テキストを入力してください..."
@@ -1129,7 +607,7 @@
         if (!error) return null;
 
         return html`
-          <div className="error-message">${error}</div>
+          <div className="bg-red-50 text-red-800 p-4 rounded-lg mt-4 border border-red-200">${error}</div>
         `;
       };
 
@@ -1183,17 +661,17 @@
         };
 
         return html`
-          <div className="camera-section">
-            <div className="camera-container">
+          <div className="mb-8">
+            <div className="relative flex flex-col items-center gap-5">
               ${!isCameraActive && html`
-                <div className="permissions-message">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-5 text-yellow-800">
                   カメラを使用するには、ブラウザの許可が必要です
                 </div>
               `}
 
               ${cameraDevices.length > 1 && html`
                 <select
-                  className="camera-select"
+                  className="w-full p-3 border-2 border-gray-200 rounded-lg text-sm bg-white text-gray-800 mb-4 cursor-pointer transition-colors duration-300 focus:outline-none focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-70"
                   value=${selectedCameraId || ''}
                   onChange=${handleCameraChange}
                   disabled=${isOcrLoading}
@@ -1209,16 +687,16 @@
 
               <video
                 id="camera-video"
-                className="camera-video"
+                className="w-full max-w-2xl h-96 rounded-xl bg-gray-50 object-cover"
                 autoplay
                 muted
                 playsInline
                 style=${`display: ${isCameraActive ? 'block' : 'none'}`}
               ></video>
 
-              <div className="camera-controls">
+              <div className="flex gap-4 flex-wrap justify-center">
                 <button
-                  className="camera-button"
+                  className="px-6 py-3 gradient-button text-white border-none rounded-lg cursor-pointer text-base font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
                   onClick=${handleCameraToggle}
                   disabled=${isOcrLoading}
                 >
@@ -1227,7 +705,7 @@
 
                 ${isCameraActive && html`
                   <button
-                    className="camera-button"
+                    className="px-6 py-3 gradient-button text-white border-none rounded-lg cursor-pointer text-base font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
                     onClick=${captureImage}
                     disabled=${isOcrLoading}
                   >
@@ -1237,15 +715,19 @@
               </div>
 
               ${$capturedImage.get() && ocrTextBlocks.length > 0 && html`
-                <div className="overlay-toggle">
+                <div className="mb-4 flex gap-2.5 justify-center flex-wrap">
                   <button
-                    className=${overlayMode === "original" ? "active" : ""}
+                    className=${`px-4 py-2 border-2 border-indigo-500 rounded-md text-sm font-semibold cursor-pointer transition-all duration-300 ${
+                      overlayMode === "original" ? "bg-indigo-500 text-white" : "bg-white text-indigo-500 hover:bg-indigo-500 hover:text-white"
+                    }`}
                     onClick=${() => setOverlayMode("original")}
                   >
                     原文表示
                   </button>
                   <button
-                    className=${overlayMode === "translated" ? "active" : ""}
+                    className=${`px-4 py-2 border-2 border-indigo-500 rounded-md text-sm font-semibold cursor-pointer transition-all duration-300 ${
+                      overlayMode === "translated" ? "bg-indigo-500 text-white" : "bg-white text-indigo-500 hover:bg-indigo-500 hover:text-white"
+                    }`}
                     onClick=${() => setOverlayMode("translated")}
                   >
                     翻訳表示
@@ -1264,29 +746,29 @@
                   <img
                     src=${$capturedImage.get()}
                     alt="Captured"
-                    className="captured-image"
+                    className="max-w-full max-h-96 rounded-xl border-2 border-gray-200 my-5"
                   />
                 `}
               `}
 
               ${ocrText && html`
-                <div className="ocr-result">
-                  <h4>検出されたテキスト</h4>
-                  <p>${ocrText}</p>
+                <div className="bg-gray-50 p-5 rounded-xl mb-5 w-full">
+                  <h4 className="text-gray-800 mb-2.5 text-base font-medium">検出されたテキスト</h4>
+                  <p className="text-gray-600 leading-relaxed m-0">${ocrText}</p>
                 </div>
               `}
 
               ${translatedOcrText && html`
-                <div className="ocr-result">
-                  <h4>翻訳結果</h4>
-                  <p>${translatedOcrText}</p>
+                <div className="bg-gray-50 p-5 rounded-xl mb-5 w-full">
+                  <h4 className="text-gray-800 mb-2.5 text-base font-medium">翻訳結果</h4>
+                  <p className="text-gray-600 leading-relaxed m-0">${translatedOcrText}</p>
                 </div>
               `}
 
               ${isOcrLoading && html`
-                <div className="ocr-result">
-                  <h4>⏳ 処理中...</h4>
-                  <p>画像から文字を読み取り、翻訳しています...</p>
+                <div className="bg-gray-50 p-5 rounded-xl mb-5 w-full">
+                  <h4 className="text-gray-800 mb-2.5 text-base font-medium">⏳ 処理中...</h4>
+                  <p className="text-gray-600 leading-relaxed m-0">画像から文字を読み取り、翻訳しています...</p>
                 </div>
               `}
             </div>
@@ -1332,11 +814,11 @@
         };
 
         return html`
-          <div className="image-overlay-container">
+          <div className="relative inline-block my-5">
             <img
               src=${imageData}
               alt="Captured"
-              className="captured-image overlay-image"
+              className="max-w-full max-h-96 rounded-xl border-2 border-gray-200 overlay-image"
               onLoad=${handleImageLoad}
             />
             ${textBlocks.map((block, index) => {
@@ -1347,7 +829,7 @@
                 ${showOriginal && html`
                   <div
                     key=${`original-${index}`}
-                    className="overlay-text original"
+                    className="overlay-text absolute bg-white bg-opacity-95 text-gray-800 px-2 py-1 rounded text-xs font-semibold shadow-lg border border-indigo-300 max-w-48 break-words z-10 pointer-events-none"
                   >
                     ${block.text}
                   </div>
@@ -1355,7 +837,7 @@
                 ${showTranslated && html`
                   <div
                     key=${`translated-${index}`}
-                    className="overlay-text translated"
+                    className="overlay-text absolute bg-indigo-500 bg-opacity-95 text-white px-2 py-1 rounded text-xs font-semibold shadow-lg border border-white border-opacity-30 max-w-48 break-words z-10 pointer-events-none"
                   >
                     ${block.translatedText}
                   </div>
@@ -1372,7 +854,7 @@
             href=${href}
             target="_blank"
             rel="noopener noreferrer"
-            className="guide-link"
+            className="text-blue-600 no-underline font-medium hover:underline"
           >
             ${children}
           </a>
@@ -1383,18 +865,18 @@
         const isGuideExpanded = useStore($isGuideExpanded);
 
         return html`
-          <div className="api-setup-guide">
-            <div className="guide-header" onClick=${toggleGuide}>
-              <h5>APIキーの取得方法</h5>
-              <span className=${`guide-toggle ${isGuideExpanded ? "expanded" : ""}`}>
+          <div className="bg-blue-50 border border-blue-200 rounded-xl mt-4 overflow-hidden">
+            <div className="bg-blue-100 px-5 py-4 cursor-pointer flex items-center justify-between transition-colors duration-300 hover:bg-blue-200" onClick=${toggleGuide}>
+              <h5 className="m-0 text-blue-700 text-lg font-medium">APIキーの取得方法</h5>
+              <span className=${`text-xl text-blue-700 transition-transform duration-300 guide-toggle ${isGuideExpanded ? "expanded" : ""}`}>
                 ▼
               </span>
             </div>
 
-            <div className=${`guide-content ${isGuideExpanded ? "expanded" : ""}`}>
+            <div className=${`guide-content px-5 ${isGuideExpanded ? "expanded py-5" : "py-0"}`}>
               <div className="guide-steps">
-                <div className="guide-step">
-                  <strong>Google Cloud アカウント作成</strong>
+                <div className="guide-step mb-4">
+                  <strong className="text-blue-700">Google Cloud アカウント作成</strong>
                   <br />
                   Google Cloud アカウントがない場合は
                   <${GuideLink} href="https://console.cloud.google.com/freetrial">
@@ -1403,8 +885,8 @@
                   から無料アカウントを作成
                 </div>
 
-                <div className="guide-step">
-                  <strong>プロジェクト作成・選択</strong>
+                <div className="guide-step mb-4">
+                  <strong className="text-blue-700">プロジェクト作成・選択</strong>
                   <br />
                   <${GuideLink} href="https://console.cloud.google.com/projectselector2/home/dashboard">
                     Google Cloud Console
@@ -1412,19 +894,19 @@
                   で新しいプロジェクトを作成するか、既存のプロジェクトを選択
                 </div>
 
-                <div className="guide-step">
-                  <strong>請求先アカウント設定</strong>
+                <div className="guide-step mb-4">
+                  <strong className="text-blue-700">請求先アカウント設定</strong>
                   <br />
                   プロジェクトに請求先アカウントを設定（無料枠内でも利用可能）
-                  <div className="warning-box">
-                    <p>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 my-2.5">
+                    <p className="m-0 text-red-700 text-sm">
                       ⚠️ Translation API は月50万文字まで、Vision API は月1000回まで無料です
                     </p>
                   </div>
                 </div>
 
-                <div className="guide-step">
-                  <strong>API の有効化</strong>
+                <div className="guide-step mb-4">
+                  <strong className="text-blue-700">API の有効化</strong>
                   <br />
                   以下の2つのAPIを有効化してください：
                   <br />
@@ -1437,8 +919,8 @@
                   <//>
                 </div>
 
-                <div className="guide-step">
-                  <strong>APIキー作成</strong>
+                <div className="guide-step mb-4">
+                  <strong className="text-blue-700">APIキー作成</strong>
                   <br />
                   <${GuideLink} href="https://console.cloud.google.com/apis/credentials">
                     認証情報ページ
@@ -1446,8 +928,8 @@
                   ➔ 「認証情報を作成」➔ 「APIキー」を選択
                 </div>
 
-                <div className="guide-step">
-                  <strong>APIキー制限設定（推奨）</strong>
+                <div className="guide-step mb-4">
+                  <strong className="text-blue-700">APIキー制限設定（推奨）</strong>
                   <br />
                   セキュリティのため、APIキーに制限を設定:
                   <br />
@@ -1456,8 +938,8 @@
                   • アプリケーション制限: HTTPリファラー（必要に応じて）
                 </div>
 
-                <div className="guide-step">
-                  <strong>APIキーをコピー</strong>
+                <div className="guide-step mb-4">
+                  <strong className="text-blue-700">APIキーをコピー</strong>
                   <br />
                   作成されたAPIキー（AIzaSy...の文字列）をコピーして、上記の入力欄に貼り付け
                 </div>
@@ -1471,40 +953,40 @@
         const activeTab = useStore($activeTab);
 
         return html`
-          <div className="usage-info">
-            <h4>使い方</h4>
+          <div className="bg-blue-50 p-5 rounded-xl mt-5">
+            <h4 className="text-blue-700 mb-2.5 text-lg font-medium">使い方</h4>
             ${activeTab === "text" && html`
-              <p>
+              <p className="text-gray-600 leading-relaxed mb-2">
                 1. Google Cloud Console でAPIキーを取得してください
               </p>
-              <p>
+              <p className="text-gray-600 leading-relaxed mb-2">
                 2.
                 上記のAPIキー欄にキーを入力してください（ブラウザに保存されます）
               </p>
-              <p>
+              <p className="text-gray-600 leading-relaxed mb-2">
                 3.
                 日本語テキストを入力し、➔ボタンをクリックまたはCtrl+Enterで翻訳
               </p>
             `}
             ${activeTab === "camera" && html`
-              <p>
+              <p className="text-gray-600 leading-relaxed mb-2">
                 1. Google Cloud Console で Translation API と Vision API
                 を有効にし、APIキーを取得してください
               </p>
-              <p>
+              <p className="text-gray-600 leading-relaxed mb-2">
                 2.
                 上記のAPIキー欄にキーを入力してください（ブラウザに保存されます）
               </p>
-              <p>
+              <p className="text-gray-600 leading-relaxed mb-2">
                 3.
                 「カメラ開始」ボタンでカメラを起動し、「撮影・翻訳」ボタンで画像を撮影・翻訳
               </p>
-              <p>
+              <p className="text-gray-600 leading-relaxed mb-2">
                 4.
                 撮影した画像から日本語テキストを検出し、自動で英語に翻訳します
               </p>
             `}
-            <p>💡 APIキーはURLパラメータでも指定可能です: ?apikey=YOUR_API_KEY</p>
+            <p className="text-gray-600 leading-relaxed mb-2">💡 APIキーはURLパラメータでも指定可能です: ?apikey=YOUR_API_KEY</p>
 
             <${ApiSetupGuide} />
           </div>
@@ -1515,16 +997,16 @@
         const activeTab = useStore($activeTab);
 
         return html`
-          <div className="container">
+          <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl p-10">
             <${Header} />
             <${ApiKeySection} />
             <${TabContainer} />
 
-            <div className=${`tab-content ${activeTab === "text" ? "active" : ""}`}>
+            <div className=${`${activeTab === "text" ? "block" : "hidden"}`}>
               <${TranslationSection} />
             </div>
 
-            <div className=${`tab-content ${activeTab === "camera" ? "active" : ""}`}>
+            <div className=${`${activeTab === "camera" ? "block" : "hidden"}`}>
               <${CameraSection} />
             </div>
 
